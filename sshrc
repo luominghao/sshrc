@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 function sshrc() {
     local SSHHOME=${SSHHOME:=~}
+    local ssh_cmd=ssh
     if [ -f $SSHHOME/.sshrc ]; then
         local files=.sshrc
         if [ -d $SSHHOME/.sshrc.d ]; then
@@ -22,7 +23,13 @@ function sshrc() {
         else
             WELCOME_MSG=""
         fi
-        ssh -t "$DOMAIN" $SSHARGS "
+
+        # 使用sshpass免密码登录
+        if [[ -n $SSHPASS ]]; then
+            ssh_cmd="sshpass -e ssh -o StrictHostKeyChecking=no"
+        fi
+
+        $ssh_cmd -t "$DOMAIN" $SSHARGS "
             command -v openssl >/dev/null 2>&1 || { echo >&2 \"sshrc requires openssl to be installed on the server, but it's not. Aborting.\"; exit 1; }
             $WELCOME_MSG
             export SSHHOME=\$(mktemp -d -t .$(whoami).sshrc.XXXX)
